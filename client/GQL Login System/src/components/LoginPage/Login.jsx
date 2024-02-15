@@ -8,6 +8,8 @@ import {
   MDBInput,
 } from "mdb-react-ui-kit";
 import Swal from "sweetalert2";
+import { useEffect } from "react";
+
 
 import { useMutation } from "@apollo/client";
 import { gql } from "@apollo/client";
@@ -22,6 +24,12 @@ function Login() {
       login(username: $username, password: $password)
     }
   `);
+
+  useEffect(() => {
+    // This code will run when the component mounts, 
+    // which happens when the page has been loaded
+    handleGitHubCallback();
+  }, []); // Empty dependency array to run the effect only once
 
   const handleLogin = async () => {
     try {
@@ -41,6 +49,49 @@ function Login() {
     }
   };
 
+  const handleGitHubLogin = async () => {
+    window.location.href = "http://localhost:4000/auth/github"; // Redirect to GitHub login
+    // handleGitHubCallback();
+  };
+
+  const handleGitHubCallback = async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('token');
+    localStorage.setItem("token", code);
+    console.log(code);
+    if (code) {
+      Swal.fire({title: "Login successful!", icon: "success"});
+    
+    setTimeout(() => {
+      window.location.href = "/home"; // Redirect to the homepage or any other desired location
+    }, 1000);
+  }
+    // window.location.href = "/home";
+
+    // if (code) {
+    //   try {
+    //     const response = await fetch(`http://localhost:4000/auth/github/callback?code=${code}`);
+    //     const data = await response.json();
+        
+    //     // Assuming your server responds with a token
+    //     const token = data.token;
+
+    //     // Do something with the token, such as storing it in localStorage
+    //     localStorage.setItem("token", token);
+
+    //     // Redirect the user to another page or perform additional actions
+    //     navigate("/dashboard"); // Redirect to dashboard page
+    //   } catch (error) {
+    //     console.error("Error exchanging code for token:", error);
+    //     Swal.fire({title: "Error", text: "Failed to login with GitHub", icon: "error"});
+    //   }
+    // } else {
+    //   console.error("Authorization code not found");
+    //   Swal.fire({title: "Error", text: "Authorization code not found", icon: "error"});
+    // }
+
+ 
+}
   return (
     <MDBContainer className="my-5 gradient-form">
       <MDBRow>
@@ -75,11 +126,19 @@ function Login() {
             />
             <div className="text-center pt-1 mb-5 pb-1">
               <MDBBtn
-                className="mb-4 w-100 gradient-custom-2"
+                className="mb-6 w-30 gradient-custom-2"
                 onClick={handleLogin}
                 disabled={loading}
               >
                 Sign in
+              </MDBBtn>
+              <span className="mb-2">               </span>
+              <MDBBtn
+                className="mb-6 w-30 gradient-custom-2"
+                onClick={handleGitHubLogin}
+                disabled={loading}
+              >
+                GitHub
               </MDBBtn>
               <p className="text-muted" href="#!">
                 Forgetting password was never an option 😂😎
