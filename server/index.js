@@ -24,6 +24,8 @@ const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 const app = express();
 const httpServer = http.createServer(app);
 
+app.use(cors());
+
 app.use(session({
   secret: SECRET_KEY,
   resave: false,
@@ -71,7 +73,7 @@ app.use(
           return {};
         }
         const decoded = jwt.verify(token, SECRET_KEY);
-        const user = users.find((user) => user.id === decoded.userId);
+        const user = users.find((user) => user.id === decoded.userId) || users.find((user) => user.username === decoded.username);
         return { user };
       } catch (error) {
         console.log(error);
@@ -82,15 +84,21 @@ app.use(
 );
 
 app.use(passport.initialize());
+app.use(cors(
+  {
+    origin: "http://localhost:5173",
+    credentials: true
+  }
 
+));
 app.get('/auth/github', passport.authenticate('github'));
 
 app.get('/auth/github/callback', passport.authenticate('github', { failureRedirect: '/' }),
   async function (req, res) {
     const token = jwt.sign({ username: req.user }, SECRET_KEY); // Adjusted to sign the username
-    console.log(token);
-    res.status(200).json({ token, username: req.user });
-    // res.redirect(`/graphql?token=${token}`);
+    // console.log(token);
+    // res.status(200).json({ token, username: req.user });
+    res.redirect('http://localhost:5173/?token=' + token);
   });
 
 
